@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -241,26 +242,33 @@ class GameViewModel:ViewModel() {
         }
     }
 
+    @Composable
     fun trapRandom(){
         if(state.value.trap) {
             val random = Random.nextBoolean()
             if (random) {
-                _state.value =
-                    _state.value.copy(jerryTouched = state.value.jerryTouched + 1, trap = false)
+                _state.value = _state.value.copy(jerryTouched = state.value.jerryTouched + 1, trap = false)
             } else {
-
+                LaunchedEffect(Unit) {
+                    _state.value = _state.value.copy(speedReset = true, trap = false)
+                    delay(12000)
+                    _state.value = _state.value.copy(speedReset = false)
+                }
             }
         }
+    }
+    fun speedReset():Boolean{
+        return state.value.speedReset
     }
 
     @Composable
     fun CheeseCount(){
-        if(state.value.cheese) {
-            LaunchedEffect(Unit) {
-                _state.value = _state.value.copy(cheeseScore = state.value.cheeseScore + 1)
-            }
+        if(state.value.cheese){
+            LaunchedEffect(Unit){_state.value= _state.value.copy(cheeseScore = state.value.cheeseScore+1)}
             _state.value = _state.value.copy(cheese = false)
         }
+
+        Log.d("Rishi" , "${state.value.heart} ${state.value.trap} ${state.value.cheese}")
     }
 
     //Vibrator

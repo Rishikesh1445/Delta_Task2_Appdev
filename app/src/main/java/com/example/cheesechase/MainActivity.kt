@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = Screen.frontPage.route){
                     composable(route = Screen.frontPage.route){
-                        FrontPage(navController)
+                        FrontPage(navController, dimension)
                     }
                     composable(route = Screen.gamePage.route){
                         GamePage(navController,viewModel,context, dimension, gyroscope)

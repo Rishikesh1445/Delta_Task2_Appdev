@@ -25,20 +25,20 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
     viewModel.openingAnimation(dimension)
 
     //White Tracks in Road and Animation
-    trackAnimation(dimension) { x -> viewModel.trackClicked(x, dimension) }
+    trackAnimation(dimension, { x -> viewModel.trackClicked(x, dimension) }, {viewModel.speedReset()})
 
     //here, 3 Obstacles are added for each track, if needed more, simply create another function
-//    Obstacle_Middle(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
-//    Obstacle_Middle(dimension , {track ->viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
-//    Obstacle_Middle(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
+//    Obstacle_Middle(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
+//    Obstacle_Middle(dimension , {track ->viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
+//    Obstacle_Middle(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
 //
-//    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
-//    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
-//    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
+//    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
+//    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
+//    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
 //
-//    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
-//    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
-//    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)})
+//    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
+//    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
+//    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {bool-> viewModel.show(bool)}, {viewModel.speedReset()})
 
     Heart(!state.heart, dimension, {track ->viewModel.delay(track)} , {track-> viewModel.heartJerryBool(track)})
     Trap(!state.trap, dimension, {track ->viewModel.delay(track)} , {track-> viewModel.trapJerryBool(track)})
@@ -47,7 +47,7 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
 
     //Scores in Top Bar
     Score(state.highscore, dimension)
-    Cheese(state.cheeseScore)
+    CheeseScore(state.cheeseScore)
     HeartTime(state.heartTime, dimension)
 
     //determines the y position of Tom based on hits
@@ -117,4 +117,7 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
             .size(tomSize, tomSize)
             .offset(tomTranslationx, tomTranslationy)
     )
+
+    if(state.gameOver){gameover({},{},{navController.navigate(Screen.frontPage.route)})}
+
 }
