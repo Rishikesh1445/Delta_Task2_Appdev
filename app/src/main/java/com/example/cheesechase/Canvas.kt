@@ -1,11 +1,18 @@
 package com.example.cheesechase
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseInElastic
+import androidx.compose.animation.core.EaseInOutBounce
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,9 +29,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -33,11 +44,93 @@ import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
+import androidx.navigation.NavController
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+@Composable
+fun FrontPage(navController: NavController, dimension: WindowInfo){
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(color = Color.hsv(359f, 0.84f, 0.49f))
+    )
+
+    val circleOneRadius = remember{Animatable(0f) }
+    val circleTwoRadius = remember{Animatable(0f) }
+    val circleThreeRadius = remember{Animatable(0f) }
+    val circleThreeColor = remember {
+        androidx.compose.animation.Animatable(
+            Color.hsv(
+                22f,
+                0.7f,
+                1f
+            )
+        )
+    }
+    val imageSize = remember{ Animatable(0f) }
+    val infiniteTransition = rememberInfiniteTransition(label = "")
+    var boolText by remember{ mutableStateOf(false) }
+    var boolClicked by remember{ mutableStateOf(false) }
+
+
+    LaunchedEffect(Unit) {
+        launch{circleOneRadius.animateTo(dimension.screenWidth / 2 + 150f, tween(600 , easing = EaseInOutBounce))}
+        launch{circleTwoRadius.animateTo(dimension.screenWidth / 2 - 50f, tween(600 , easing = EaseInOutBounce))}
+        launch { circleThreeRadius.animateTo(dimension.screenWidth / 2 - 200f, tween(600 , easing = EaseInOutBounce));
+            imageSize.animateTo(300f, tween(600, easing = EaseInOutBounce)) ; boolText = true}
+    }
+    if(boolClicked){
+        LaunchedEffect(Unit) {
+            launch{imageSize.animateTo(0f, tween(0, easing = EaseInElastic));
+                circleOneRadius.animateTo(dimension.screenWidth / 2 + 350f, tween(600 , easing = EaseInElastic))}
+            launch{circleTwoRadius.animateTo(dimension.screenWidth / 2 + 150f, tween(600 , easing = EaseInElastic));
+                circleThreeColor.animateTo(Color.hsv(185f, 0.81f, 1f))}
+            launch { boolText = false;circleThreeRadius.animateTo(dimension.screenWidth / 2 + 800f, tween(600 , easing = EaseInElastic));
+                delay(1000);navController.navigate(Screen.gamePage.route) }
+        }
+    }
+
+    Canvas(modifier= Modifier
+        .fillMaxSize()
+        .clickable { boolClicked = true }){
+        drawCircle(
+            color = Color.hsv(358f, 0.81f, 0.65f),
+            radius = circleOneRadius.value
+        )
+        drawCircle(
+            color= Color.hsv(358f, 0.81f, 0.9f),
+            radius = circleTwoRadius.value
+        )
+        drawCircle(
+            color = circleThreeColor.value,
+            radius = circleThreeRadius.value
+        )
+    }
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Image(
+            painter = painterResource(id = R.drawable.frontpage), contentDescription = null,
+            modifier = Modifier.size(imageSize.value.dp)
+        )
+        if(boolText) {
+            val textAlpha by infiniteTransition.animateFloat(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(durationMillis = 400, easing = LinearEasing),
+                    repeatMode = RepeatMode.Reverse
+                ), label = ""
+            )
+            Text("TAP ANYWHERE TO BEGIN" , color = Color.White , fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
+                modifier = Modifier.alpha(textAlpha))
+        }
+    }
+}
 
 @Composable
 fun trackAnimation(dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset:()->Boolean){
@@ -52,7 +145,7 @@ fun trackAnimation(dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset
             if(speedReset()){time = 1500}
         }
     }
-
+    Box(modifier = Modifier.fillMaxSize().background(color = Color.hsv(185f, 0.81f, 1f))){}
     //The roads with moving tracks and Tap Gesture
     Canvas(
         modifier = Modifier
