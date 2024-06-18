@@ -1,6 +1,6 @@
 package com.example.cheesechase
 
-import android.util.Log
+import android.content.Context
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInElastic
 import androidx.compose.animation.core.EaseInOutBounce
@@ -29,13 +29,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,22 +54,21 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.stream.IntStream.range
 
 @Composable
-fun FrontPage(navController: NavController, dimension: WindowInfo){
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(color = Color.hsv(359f, 0.84f, 0.49f))
+fun FrontPage(viewModel: GameViewModel, context: Context, navController: NavController, dimension: WindowInfo) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.hsv(359f, 0.84f, 0.49f))
     )
 
-    val circleOneRadius = remember{Animatable(0f) }
-    val circleTwoRadius = remember{Animatable(0f) }
-    val circleThreeRadius = remember{Animatable(0f) }
+    val circleOneRadius = remember { Animatable(0f) }
+    val circleTwoRadius = remember { Animatable(0f) }
+    val circleThreeRadius = remember { Animatable(0f) }
     val circleThreeColor = remember {
         androidx.compose.animation.Animatable(
             Color.hsv(
@@ -81,38 +78,69 @@ fun FrontPage(navController: NavController, dimension: WindowInfo){
             )
         )
     }
-    val imageSize = remember{ Animatable(0f) }
+    val imageSize = remember { Animatable(0f) }
     val infiniteTransition = rememberInfiniteTransition(label = "")
-    var boolText by remember{ mutableStateOf(false) }
-    var boolClicked by remember{ mutableStateOf(false) }
+    var boolText by remember { mutableStateOf(false) }
+    var boolClicked by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(Unit) {
-        launch{circleOneRadius.animateTo(dimension.screenWidth / 2 + 150f, tween(600 , easing = EaseInOutBounce))}
-        launch{circleTwoRadius.animateTo(dimension.screenWidth / 2 - 50f, tween(600 , easing = EaseInOutBounce))}
-        launch { circleThreeRadius.animateTo(dimension.screenWidth / 2 - 200f, tween(600 , easing = EaseInOutBounce));
-            imageSize.animateTo(300f, tween(600, easing = EaseInOutBounce)) ; boolText = true}
+        viewModel.bg(context)
+        launch {
+            circleOneRadius.animateTo(
+                dimension.screenWidth / 2 + 150f,
+                tween(600, easing = EaseInOutBounce)
+            )
+        }
+        launch {
+            circleTwoRadius.animateTo(
+                dimension.screenWidth / 2 - 50f,
+                tween(600, easing = EaseInOutBounce)
+            )
+        }
+        launch {
+            circleThreeRadius.animateTo(
+                dimension.screenWidth / 2 - 200f,
+                tween(600, easing = EaseInOutBounce)
+            );
+            imageSize.animateTo(300f, tween(600, easing = EaseInOutBounce)); boolText = true
+        }
     }
-    if(boolClicked){
+    if (boolClicked) {
         LaunchedEffect(Unit) {
-            launch{imageSize.animateTo(0f, tween(0, easing = EaseInElastic));
-                circleOneRadius.animateTo(dimension.screenWidth / 2 + 350f, tween(600 , easing = EaseInElastic))}
-            launch{circleTwoRadius.animateTo(dimension.screenWidth / 2 + 150f, tween(600 , easing = EaseInElastic));
-                circleThreeColor.animateTo(Color.hsv(185f, 0.81f, 1f))}
-            launch { boolText = false;circleThreeRadius.animateTo(dimension.screenWidth / 2 + 800f, tween(600 , easing = EaseInElastic));
-                delay(1000);navController.navigate(Screen.gamePage.route) }
+            launch {
+                imageSize.animateTo(0f, tween(0, easing = EaseInElastic));
+                circleOneRadius.animateTo(
+                    dimension.screenWidth / 2 + 350f,
+                    tween(600, easing = EaseInElastic)
+                )
+            }
+            launch {
+                circleTwoRadius.animateTo(
+                    dimension.screenWidth / 2 + 150f,
+                    tween(600, easing = EaseInElastic)
+                );
+                circleThreeColor.animateTo(Color.hsv(185f, 0.81f, 1f))
+            }
+            launch {
+                boolText = false;circleThreeRadius.animateTo(
+                dimension.screenWidth / 2 + 800f,
+                tween(600, easing = EaseInElastic)
+            );
+                delay(1000);navController.navigate(Screen.gamePage.route)
+            }
         }
     }
 
-    Canvas(modifier= Modifier
+    Canvas(modifier = Modifier
         .fillMaxSize()
-        .clickable { boolClicked = true }){
+        .clickable { boolClicked = true }) {
         drawCircle(
             color = Color.hsv(358f, 0.81f, 0.65f),
             radius = circleOneRadius.value
         )
         drawCircle(
-            color= Color.hsv(358f, 0.81f, 0.9f),
+            color = Color.hsv(358f, 0.81f, 0.9f),
             radius = circleTwoRadius.value
         )
         drawCircle(
@@ -120,12 +148,16 @@ fun FrontPage(navController: NavController, dimension: WindowInfo){
             radius = circleThreeRadius.value
         )
     }
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Image(
             painter = painterResource(id = R.drawable.frontpage), contentDescription = null,
             modifier = Modifier.size(imageSize.value.dp)
         )
-        if(boolText) {
+        if (boolText) {
             val textAlpha by infiniteTransition.animateFloat(
                 initialValue = 0f,
                 targetValue = 1f,
@@ -134,18 +166,28 @@ fun FrontPage(navController: NavController, dimension: WindowInfo){
                     repeatMode = RepeatMode.Reverse
                 ), label = ""
             )
-            Text("TAP ANYWHERE TO BEGIN" , color = Color.White , fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold,
-                modifier = Modifier.alpha(textAlpha))
+            Text(
+                "TAP ANYWHERE TO BEGIN",
+                color = Color.White,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.alpha(textAlpha)
+            )
         }
     }
 }
 
 @Composable
-fun trackAnimation(paused: () -> Boolean,   dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset:()->Boolean){
+fun trackAnimation(
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    whereClicked: (Float) -> Unit,
+    speedReset: () -> Boolean
+) {
     //Animation
-    val translate = remember{ Animatable(-3 * dimension.screenHeight / 20) }
-    var time=1500
-    LaunchedEffect(Unit){
+    val translate = remember { Animatable(-3 * dimension.screenHeight / 20) }
+    var time = 1500
+    LaunchedEffect(Unit) {
         fun animation() {
             launch {
                 while (!paused()) {
@@ -168,7 +210,7 @@ fun trackAnimation(paused: () -> Boolean,   dimension:WindowInfo, whereClicked: 
         }
         animation()
         launch {
-            while(true) {
+            while (true) {
                 while (true) {
                     if (paused()) {
                         translate.stop();break
@@ -176,60 +218,72 @@ fun trackAnimation(paused: () -> Boolean,   dimension:WindowInfo, whereClicked: 
                 }
                 while (true) {
                     if (!paused()) {
-                        translate.snapTo(-3 * dimension.screenHeight / 20);animation();break
+                        translate.snapTo(-3 * dimension.screenHeight / 20);time =
+                            1500;animation();break
                     }; delay(200)
                 }
             }
         }
     }
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(color = Color.hsv(185f, 0.81f, 1f))){}
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.hsv(185f, 0.81f, 1f))
+    ) {}
     //The roads with moving tracks and Tap Gesture
     Canvas(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(Unit) { detectTapGestures { whereClicked(it.x) } }
-    ){
+    ) {
         drawRect(
             Color.Black,
-            topLeft = Offset(dimension.screenWidth/2 - dimension.screenWidth/10 , 0F),
-            size = Size(dimension.screenWidth/5,dimension.screenHeight)
+            topLeft = Offset(dimension.screenWidth / 2 - dimension.screenWidth / 10, 0F),
+            size = Size(dimension.screenWidth / 5, dimension.screenHeight)
         )
         drawRect(
             Color.Black,
-            topLeft = Offset(dimension.screenWidth/4 - dimension.screenWidth/10 -50F , 0F),
-            size = Size(dimension.screenWidth/5,dimension.screenHeight)
+            topLeft = Offset(dimension.screenWidth / 4 - dimension.screenWidth / 10 - 50F, 0F),
+            size = Size(dimension.screenWidth / 5, dimension.screenHeight)
         )
         drawRect(
             Color.Black,
-            topLeft = Offset(3*dimension.screenWidth/4 - dimension.screenWidth/10 +50F, 0F),
-            size = Size(dimension.screenWidth/5,dimension.screenHeight)
+            topLeft = Offset(3 * dimension.screenWidth / 4 - dimension.screenWidth / 10 + 50F, 0F),
+            size = Size(dimension.screenWidth / 5, dimension.screenHeight)
         )
-        translate(0F,translate.value) {
+        translate(0F, translate.value) {
             for (i in 0..10) {
                 drawRect(
                     Color.White,
-                    topLeft = Offset(dimension.screenWidth/2-dimension.screenWidth/140 , i*dimension.screenHeight/10),
-                    size = Size(dimension.screenWidth/70, dimension.screenHeight/20)
+                    topLeft = Offset(
+                        dimension.screenWidth / 2 - dimension.screenWidth / 140,
+                        i * dimension.screenHeight / 10
+                    ),
+                    size = Size(dimension.screenWidth / 70, dimension.screenHeight / 20)
                 )
             }
         }
-        translate(0F,translate.value) {
+        translate(0F, translate.value) {
             for (i in 0..10) {
                 drawRect(
                     Color.White,
-                    topLeft = Offset(dimension.screenWidth/4-dimension.screenWidth/140 -50F , i*dimension.screenHeight/10),
-                    size = Size(dimension.screenWidth/70, dimension.screenHeight/20)
+                    topLeft = Offset(
+                        dimension.screenWidth / 4 - dimension.screenWidth / 140 - 50F,
+                        i * dimension.screenHeight / 10
+                    ),
+                    size = Size(dimension.screenWidth / 70, dimension.screenHeight / 20)
                 )
             }
         }
-        translate(0F,translate.value) {
+        translate(0F, translate.value) {
             for (i in 0..10) {
                 drawRect(
                     Color.White,
-                    topLeft = Offset(3*dimension.screenWidth/4 - dimension.screenWidth/140 +50F, i*dimension.screenHeight/10),
-                    size = Size(dimension.screenWidth/70, dimension.screenHeight/20)
+                    topLeft = Offset(
+                        3 * dimension.screenWidth / 4 - dimension.screenWidth / 140 + 50F,
+                        i * dimension.screenHeight / 10
+                    ),
+                    size = Size(dimension.screenWidth / 70, dimension.screenHeight / 20)
                 )
             }
         }
@@ -237,39 +291,45 @@ fun trackAnimation(paused: () -> Boolean,   dimension:WindowInfo, whereClicked: 
 }
 
 @Composable
-fun Obstacle_Middle(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
-    val yPos = remember{ Animatable(-100F)}
+fun Obstacle_Middle(
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    delay: (GameStates.Track) -> Int,
+    crossedJerry: (GameStates.Track) -> Unit,
+    crossedTom: (GameStates.Track) -> Unit,
+    speedReset: () -> Boolean
+) {
+    val yPos = remember { Animatable(-100F) }
     var time = 8000
-    var delayTime :Int
+    var delayTime: Int
 
     //Animation in while loop and animateTo executes from Coroutine context
-    LaunchedEffect(Unit){
-            fun animation(){
-                launch {
-                    while (!paused()) {
-                        delayTime = delay(States.Track.Middle)
-                        yPos.animateTo(
-                            dimension.screenHeight + 100F,
-                            animationSpec = tween(
-                                time,
-                                easing = LinearEasing,
-                                delayMillis = delayTime
-                            )
+    LaunchedEffect(Unit) {
+        fun animation() {
+            launch {
+                while (!paused()) {
+                    delayTime = delay(GameStates.Track.Middle)
+                    yPos.animateTo(
+                        dimension.screenHeight + 100F,
+                        animationSpec = tween(
+                            time,
+                            easing = LinearEasing,
+                            delayMillis = delayTime
                         )
-                        yPos.animateTo(-100F, animationSpec = tween(1))
-                        if (time >= 3500) {
-                            time -= 1500
-                        }
-                        Log.d("Rishi" , "$time")
-                        if (speedReset()) {
-                            time = 8000
-                        }
+                    )
+                    yPos.animateTo(-100F, animationSpec = tween(1))
+                    if (time >= 3500) {
+                        time -= 1500
+                    }
+                    if (speedReset()) {
+                        time = 8000
                     }
                 }
             }
+        }
         animation()
         launch {
-            while(true) {
+            while (true) {
                 while (true) {
                     if (paused()) {
                         yPos.stop();break
@@ -277,7 +337,7 @@ fun Obstacle_Middle(paused: () -> Boolean, dimension: WindowInfo,delay:(States.T
                 }
                 while (true) {
                     if (!paused()) {
-                        yPos.snapTo(-100F);animation();break
+                        yPos.snapTo(-100F);time = 8000;animation();break
                     }; delay(200)
                 }
             }
@@ -285,34 +345,34 @@ fun Obstacle_Middle(paused: () -> Boolean, dimension: WindowInfo,delay:(States.T
     }
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        translate(dimension.screenWidth/2 - dimension.screenWidth/8, yPos.value) {
+        translate(dimension.screenWidth / 2 - dimension.screenWidth / 8, yPos.value) {
             drawOval(
                 color = Color.hsv(128f, 0.86f, 0.86f),
-                size = Size(dimension.screenWidth/4, dimension.screenWidth/12)
+                size = Size(dimension.screenWidth / 4, dimension.screenWidth / 12)
             )
-            translate(dimension.screenWidth/24 , -dimension.screenWidth/8) {
+            translate(dimension.screenWidth / 24, -dimension.screenWidth / 8) {
                 drawArc(
                     color = Color.Gray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    size = Size(dimension.screenWidth/6, dimension.screenHeight/6)
+                    size = Size(dimension.screenWidth / 6, dimension.screenHeight / 6)
                 )
                 drawArc(
                     color = Color.DarkGray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    topLeft = Offset(-dimension.screenWidth/24 , dimension.screenHeight/30),
-                    size = Size(dimension.screenWidth/12, dimension.screenHeight/10)
+                    topLeft = Offset(-dimension.screenWidth / 24, dimension.screenHeight / 30),
+                    size = Size(dimension.screenWidth / 12, dimension.screenHeight / 10)
                 )
                 drawArc(
                     color = Color.LightGray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    topLeft = Offset(dimension.screenWidth/24 , dimension.screenHeight/24),
-                    size = Size(dimension.screenWidth/6, dimension.screenHeight/12)
+                    topLeft = Offset(dimension.screenWidth / 24, dimension.screenHeight / 24),
+                    size = Size(dimension.screenWidth / 6, dimension.screenHeight / 12)
                 )
             }
 
@@ -320,25 +380,32 @@ fun Obstacle_Middle(paused: () -> Boolean, dimension: WindowInfo,delay:(States.T
 
     }
 
-    if(yPos.value > (dimension.screenHeight - 700F)){
-        LaunchedEffect(Unit){crossedJerry(States.Track.Middle) }
+    if (yPos.value > (dimension.screenHeight - 700F)) {
+        LaunchedEffect(Unit) { crossedJerry(GameStates.Track.Middle) }
     }
-    if(yPos.value > (dimension.screenHeight - 450F)){
-        LaunchedEffect(Unit){crossedTom(States.Track.Middle)}
+    if (yPos.value > (dimension.screenHeight - 450F)) {
+        LaunchedEffect(Unit) { crossedTom(GameStates.Track.Middle) }
     }
 }
 
 @Composable
-fun Obstacle_Left(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit, crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
-    val yPos = remember{ Animatable(-100F)}
+fun Obstacle_Left(
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    delay: (GameStates.Track) -> Int,
+    crossedJerry: (GameStates.Track) -> Unit,
+    crossedTom: (GameStates.Track) -> Unit,
+    speedReset: () -> Boolean
+) {
+    val yPos = remember { Animatable(-100F) }
     var time = 8000
-    var delayTime:Int
+    var delayTime: Int
     //Animation in while loop and animateTo executes from Coroutine context
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         fun animation() {
             launch {
                 while (!paused()) {
-                    delayTime = delay(States.Track.Left)
+                    delayTime = delay(GameStates.Track.Left)
                     yPos.animateTo(
                         dimension.screenHeight + 100F,
                         animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime)
@@ -355,7 +422,7 @@ fun Obstacle_Left(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tra
         }
         animation()
         launch {
-            while(true) {
+            while (true) {
                 while (true) {
                     if (paused()) {
                         yPos.stop();break
@@ -363,7 +430,7 @@ fun Obstacle_Left(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tra
                 }
                 while (true) {
                     if (!paused()) {
-                        yPos.snapTo(-100F);animation();break
+                        yPos.snapTo(-100F);time = 8000;animation();break
                     }; delay(200)
                 }
             }
@@ -371,34 +438,34 @@ fun Obstacle_Left(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tra
     }
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        translate(dimension.screenWidth/4 -50F - dimension.screenWidth/8, yPos.value) {
+        translate(dimension.screenWidth / 4 - 50F - dimension.screenWidth / 8, yPos.value) {
             drawOval(
                 color = Color.hsv(128f, 0.86f, 0.86f),
-                size = Size(dimension.screenWidth/4, dimension.screenWidth/12)
+                size = Size(dimension.screenWidth / 4, dimension.screenWidth / 12)
             )
-            translate(dimension.screenWidth/24 , -dimension.screenWidth/8) {
+            translate(dimension.screenWidth / 24, -dimension.screenWidth / 8) {
                 drawArc(
                     color = Color.Gray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    size = Size(dimension.screenWidth/6, dimension.screenHeight/6)
+                    size = Size(dimension.screenWidth / 6, dimension.screenHeight / 6)
                 )
                 drawArc(
                     color = Color.DarkGray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    topLeft = Offset(-dimension.screenWidth/24 , dimension.screenHeight/30),
-                    size = Size(dimension.screenWidth/12, dimension.screenHeight/10)
+                    topLeft = Offset(-dimension.screenWidth / 24, dimension.screenHeight / 30),
+                    size = Size(dimension.screenWidth / 12, dimension.screenHeight / 10)
                 )
                 drawArc(
                     color = Color.LightGray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    topLeft = Offset(dimension.screenWidth/24 , dimension.screenHeight/24),
-                    size = Size(dimension.screenWidth/6, dimension.screenHeight/12)
+                    topLeft = Offset(dimension.screenWidth / 24, dimension.screenHeight / 24),
+                    size = Size(dimension.screenWidth / 6, dimension.screenHeight / 12)
                 )
             }
 
@@ -406,25 +473,32 @@ fun Obstacle_Left(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tra
 
     }
 
-    if(yPos.value > (dimension.screenHeight - 700F)){
-        LaunchedEffect(Unit){crossedJerry(States.Track.Left) }
+    if (yPos.value > (dimension.screenHeight - 700F)) {
+        LaunchedEffect(Unit) { crossedJerry(GameStates.Track.Left) }
     }
-    if(yPos.value > (dimension.screenHeight - 450F)){
-        LaunchedEffect(Unit){crossedTom(States.Track.Left)}
+    if (yPos.value > (dimension.screenHeight - 450F)) {
+        LaunchedEffect(Unit) { crossedTom(GameStates.Track.Left) }
     }
 }
 
 @Composable
-fun Obstacle_Right(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
-    val yPos = remember{ Animatable(-100F)}
+fun Obstacle_Right(
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    delay: (GameStates.Track) -> Int,
+    crossedJerry: (GameStates.Track) -> Unit,
+    crossedTom: (GameStates.Track) -> Unit,
+    speedReset: () -> Boolean
+) {
+    val yPos = remember { Animatable(-100F) }
     var time = 8000
-    var delayTime:Int
+    var delayTime: Int
     //Animation in while loop and animateTo executes from Coroutine context
-    LaunchedEffect(Unit){
+    LaunchedEffect(Unit) {
         fun animation() {
             launch {
                 while (!paused()) {
-                    delayTime = delay(States.Track.Right)
+                    delayTime = delay(GameStates.Track.Right)
                     yPos.animateTo(
                         dimension.screenHeight + 100F,
                         animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime)
@@ -441,7 +515,7 @@ fun Obstacle_Right(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tr
         }
         animation()
         launch {
-            while(true) {
+            while (true) {
                 while (true) {
                     if (paused()) {
                         yPos.stop();break
@@ -449,7 +523,7 @@ fun Obstacle_Right(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tr
                 }
                 while (true) {
                     if (!paused()) {
-                        yPos.snapTo(-100F);animation();break
+                        yPos.snapTo(-100F);time = 8000;animation();break
                     }; delay(200)
                 }
             }
@@ -457,34 +531,34 @@ fun Obstacle_Right(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tr
     }
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        translate(3*dimension.screenWidth/4 +50F - dimension.screenWidth/8, yPos.value) {
+        translate(3 * dimension.screenWidth / 4 + 50F - dimension.screenWidth / 8, yPos.value) {
             drawOval(
                 color = Color.hsv(128f, 0.86f, 0.86f),
-                size = Size(dimension.screenWidth/4, dimension.screenWidth/12)
+                size = Size(dimension.screenWidth / 4, dimension.screenWidth / 12)
             )
-            translate(dimension.screenWidth/24 , -dimension.screenWidth/8) {
+            translate(dimension.screenWidth / 24, -dimension.screenWidth / 8) {
                 drawArc(
                     color = Color.Gray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    size = Size(dimension.screenWidth/6, dimension.screenHeight/6)
+                    size = Size(dimension.screenWidth / 6, dimension.screenHeight / 6)
                 )
                 drawArc(
                     color = Color.DarkGray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    topLeft = Offset(-dimension.screenWidth/24 , dimension.screenHeight/30),
-                    size = Size(dimension.screenWidth/12, dimension.screenHeight/10)
+                    topLeft = Offset(-dimension.screenWidth / 24, dimension.screenHeight / 30),
+                    size = Size(dimension.screenWidth / 12, dimension.screenHeight / 10)
                 )
                 drawArc(
                     color = Color.LightGray,
-                    startAngle =180f,
-                    sweepAngle =180f,
+                    startAngle = 180f,
+                    sweepAngle = 180f,
                     useCenter = false,
-                    topLeft = Offset(dimension.screenWidth/24 , dimension.screenHeight/24),
-                    size = Size(dimension.screenWidth/6, dimension.screenHeight/12)
+                    topLeft = Offset(dimension.screenWidth / 24, dimension.screenHeight / 24),
+                    size = Size(dimension.screenWidth / 6, dimension.screenHeight / 12)
                 )
             }
 
@@ -492,41 +566,48 @@ fun Obstacle_Right(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Tr
 
     }
 
-    if(yPos.value > (dimension.screenHeight - 700F)){
-        LaunchedEffect(Unit){crossedJerry(States.Track.Right) }
+    if (yPos.value > (dimension.screenHeight - 700F)) {
+        LaunchedEffect(Unit) { crossedJerry(GameStates.Track.Right) }
     }
-    if(yPos.value > (dimension.screenHeight - 450F)){
-        LaunchedEffect(Unit){crossedTom(States.Track.Right)}
+    if (yPos.value > (dimension.screenHeight - 450F)) {
+        LaunchedEffect(Unit) { crossedTom(GameStates.Track.Right) }
     }
 }
 
 @Composable
-fun Score(score:Int , dimension: WindowInfo){
-    Canvas(modifier = Modifier
-        .fillMaxSize()
-        .padding(8.dp, 16.dp)){
+fun Score(score: Int, dimension: WindowInfo) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp, 16.dp)
+    ) {
         drawRoundRect(
             Color.LightGray,
             size = Size(400F, 100F),
             cornerRadius = CornerRadius(40F, 40F),
-            topLeft = Offset(dimension.screenWidth-450F, 0F)
+            topLeft = Offset(dimension.screenWidth - 450F, 0F)
         )
     }
-    Image(painter = painterResource(id = R.drawable.star), contentDescription = null,
+    Image(
+        painter = painterResource(id = R.drawable.star), contentDescription = null,
         modifier = Modifier
             .size(35.dp, 35.dp)
             .offset(250.dp, 15.dp)
     )
-    Text("$score" , modifier = Modifier
-        .fillMaxSize()
-        .offset(310.dp, 15.dp), fontSize = 25.sp )
+    Text(
+        "$score", modifier = Modifier
+            .fillMaxSize()
+            .offset(310.dp, 15.dp), fontSize = 25.sp
+    )
 }
 
 @Composable
-fun CheeseScore(cheese:Int){
-    Canvas(modifier = Modifier
-        .fillMaxSize()
-        .padding(8.dp, 16.dp)){
+fun CheeseScore(cheese: Int) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(8.dp, 16.dp)
+    ) {
         drawRoundRect(
             Color.LightGray,
             size = Size(400F, 100F),
@@ -534,124 +615,143 @@ fun CheeseScore(cheese:Int){
             topLeft = Offset(12F, 0F)
         )
     }
-    Image(painter = painterResource(id = R.drawable.cheese), contentDescription = null,
+    Image(
+        painter = painterResource(id = R.drawable.cheese), contentDescription = null,
         modifier = Modifier
             .size(35.dp, 35.dp)
             .offset(18.dp, 15.dp)
     )
-    Text("$cheese" , modifier = Modifier
-        .fillMaxSize()
-        .offset(85.dp, 15.dp), fontSize = 25.sp )
+    Text(
+        "$cheese", modifier = Modifier
+            .fillMaxSize()
+            .offset(85.dp, 15.dp), fontSize = 25.sp
+    )
 }
 
-val list = listOf(States.Track.Middle, States.Track.Left, States.Track.Right)
+val list = listOf(GameStates.Track.Middle, GameStates.Track.Left, GameStates.Track.Right)
 
 @Composable
-fun Heart( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , heartJerry:(States.Track)->Unit, speedReset:()->Boolean){
-        val yPos = remember{ Animatable(-60F)}
-        val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
-        var alpha by remember { mutableFloatStateOf(1f) }
-        var time = 22000
-        LaunchedEffect(Unit){
-            withContext(Dispatchers.IO){
-                fun animation() {
-                    launch {
-                        while (!paused()) {
-                            val track = list.random()
-                            val delayTime = delay(track) + 2500
-                            when (track) {
-                                States.Track.Middle -> {
-                                    xPos.animateTo(
-                                        (dimension.screenWidthinDp / 2 - 25.dp).value,
-                                        tween(1)
-                                    )
-                                }
-
-                                States.Track.Left -> {
-                                    xPos.animateTo(
-                                        (dimension.screenWidthinDp / 4 - 45.dp).value,
-                                        tween(1)
-                                    )
-                                }
-
-                                States.Track.Right -> {
-                                    xPos.animateTo(
-                                        (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
-                                        tween(1)
-                                    )
-                                }
-                            }
-                            yPos.animateTo(
-                                2500F,
-                                tween(time, easing = LinearEasing, delayMillis = delayTime)
-                            ).endState
-                            if (time > 10000) {
-                                time -= 8000
-                            }
-                            if (speedReset()) {
-                                time = 22000
-                            }
-                            yPos.animateTo(-60F, tween(1, easing = LinearEasing))
-                        }
-                    }
-                }
-                animation()
+fun Heart(
+    show: Boolean,
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    delay: (GameStates.Track) -> Int,
+    heartJerry: (GameStates.Track) -> Unit,
+    speedReset: () -> Boolean
+) {
+    val yPos = remember { Animatable(-60F) }
+    val xPos = remember { Animatable((dimension.screenWidthinDp / 2 - 25.dp).value) }
+    var alpha by remember { mutableFloatStateOf(1f) }
+    var time = 22000
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            fun animation() {
                 launch {
-                    while(true) {
-                        while (true) {
-                            if (paused()) {
-                                yPos.stop();break
+                    while (!paused()) {
+                        val track = list.random()
+                        val delayTime = delay(track) + 2500
+                        when (track) {
+                            GameStates.Track.Middle -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 2 - 25.dp).value,
+                                    tween(1)
+                                )
+                            }
+
+                            GameStates.Track.Left -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 4 - 45.dp).value,
+                                    tween(1)
+                                )
+                            }
+
+                            GameStates.Track.Right -> {
+                                xPos.animateTo(
+                                    (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
+                                    tween(1)
+                                )
                             }
                         }
-                        while (true) {
-                            if (!paused()) {
-                                yPos.snapTo(-60F);animation();break
-                            }
+                        yPos.animateTo(
+                            2500F,
+                            tween(time, easing = LinearEasing, delayMillis = delayTime)
+                        ).endState
+                        if (time > 10000) {
+                            time -= 8000
+                        }
+                        if (speedReset()) {
+                            time = 22000
+                        }
+                        yPos.animateTo(-60F, tween(1, easing = LinearEasing))
+                    }
+                }
+            }
+            animation()
+            launch {
+                while (true) {
+                    while (true) {
+                        if (paused()) {
+                            yPos.stop();break
+                        }
+                    }
+                    while (true) {
+                        if (!paused()) {
+                            yPos.snapTo(-60F);time = 22000;animation();break
                         }
                     }
                 }
             }
         }
-        alpha = if(show){0f}else{1f}
-        Image(
-            painter = painterResource(id = R.drawable.heart), contentDescription = null,
-            modifier = Modifier
-                .size(50.dp, 50.dp)
-                .offset(xPos.value.dp, yPos.value.dp)
-                .alpha(alpha)
-        )
-        if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -180.dp).value.toInt()) {
-            when (xPos.value) {
-                (53.25F) -> {
-                    heartJerry(States.Track.Left)
-                }
-                (284.75F) -> {
-                    heartJerry(States.Track.Right)
-                }
-                (171.5F) -> {
-                    heartJerry(States.Track.Middle)
-                }
+    }
+    alpha = if (show) {
+        0f
+    } else {
+        1f
+    }
+    Image(
+        painter = painterResource(id = R.drawable.heart), contentDescription = null,
+        modifier = Modifier
+            .size(50.dp, 50.dp)
+            .offset(xPos.value.dp, yPos.value.dp)
+            .alpha(alpha)
+    )
+    if (yPos.value.toInt() in ((dimension.screenHeightinDp - 250.dp).value.toInt())..(dimension.screenHeightinDp - 180.dp).value.toInt()) {
+        when (xPos.value) {
+            (53.25F) -> {
+                heartJerry(GameStates.Track.Left)
+            }
+
+            (284.75F) -> {
+                heartJerry(GameStates.Track.Right)
+            }
+
+            (171.5F) -> {
+                heartJerry(GameStates.Track.Middle)
             }
         }
+    }
 }
+
 @Composable
-fun HeartTime(time:Int , dimension: WindowInfo){
+fun HeartTime(time: Int, dimension: WindowInfo) {
     Canvas(
         modifier = Modifier
             .fillMaxSize()
             .padding(8.dp, 16.dp)
-        ) {
-            drawRoundRect(
-                Color.LightGray,
-                size = Size(175F, 100F),
-                cornerRadius = CornerRadius(40F, 40F),
-                topLeft = Offset(dimension.screenWidth/2- 105, 0F)
-            )
-        }
-    Image(painter = painterResource(id = R.drawable.heart), contentDescription = null,
+    ) {
+        drawRoundRect(
+            Color.LightGray,
+            size = Size(175F, 100F),
+            cornerRadius = CornerRadius(40F, 40F),
+            topLeft = Offset(dimension.screenWidth / 2 - 105, 0F)
+        )
+    }
+    Image(
+        painter = painterResource(id = R.drawable.heart), contentDescription = null,
         modifier = Modifier
             .size(20.dp, 20.dp)
-            .offset(dimension.screenWidthinDp / 2 - 24.dp, 22.dp))
+            .offset(dimension.screenWidthinDp / 2 - 24.dp, 22.dp)
+    )
 
     Text(
         "$time", modifier = Modifier
@@ -661,34 +761,41 @@ fun HeartTime(time:Int , dimension: WindowInfo){
 }
 
 @Composable
-fun Trap( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , trapJerry:(States.Track)->Unit, speedReset:()->Boolean){
-    val yPos = remember{ Animatable(-60F)}
-    val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
+fun Trap(
+    show: Boolean,
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    delay: (GameStates.Track) -> Int,
+    trapJerry: (GameStates.Track) -> Unit,
+    speedReset: () -> Boolean
+) {
+    val yPos = remember { Animatable(-60F) }
+    val xPos = remember { Animatable((dimension.screenWidthinDp / 2 - 25.dp).value) }
     var alpha by remember { mutableFloatStateOf(1f) }
     var time = 22000
-    LaunchedEffect(Unit){
-        withContext(Dispatchers.IO){
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
             fun animation() {
                 launch {
                     while (!paused()) {
                         val track = list.random()
                         val delayTime = delay(track) + 6000
                         when (track) {
-                            States.Track.Middle -> {
+                            GameStates.Track.Middle -> {
                                 xPos.animateTo(
                                     (dimension.screenWidthinDp / 2 - 25.dp).value,
                                     tween(1)
                                 )
                             }
 
-                            States.Track.Left -> {
+                            GameStates.Track.Left -> {
                                 xPos.animateTo(
                                     (dimension.screenWidthinDp / 4 - 45.dp).value,
                                     tween(1)
                                 )
                             }
 
-                            States.Track.Right -> {
+                            GameStates.Track.Right -> {
                                 xPos.animateTo(
                                     (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
                                     tween(1)
@@ -712,7 +819,7 @@ fun Trap( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (State
             animation()
             launch {
 
-                while(true) {
+                while (true) {
                     while (true) {
                         if (paused()) {
                             yPos.stop();break
@@ -720,14 +827,18 @@ fun Trap( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (State
                     }
                     while (true) {
                         if (!paused()) {
-                            yPos.snapTo(-60F);animation();break
+                            yPos.snapTo(-60F);time = 22000;animation();break
                         }
                     }
                 }
             }
         }
     }
-    alpha = if(show){0f}else{1f}
+    alpha = if (show) {
+        0f
+    } else {
+        1f
+    }
     Image(
         painter = painterResource(id = R.drawable.box), contentDescription = null,
         modifier = Modifier
@@ -735,50 +846,59 @@ fun Trap( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (State
             .offset(xPos.value.dp, yPos.value.dp)
             .alpha(alpha)
     )
-    if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -180.dp).value.toInt()) {
+    if (yPos.value.toInt() in ((dimension.screenHeightinDp - 250.dp).value.toInt())..(dimension.screenHeightinDp - 180.dp).value.toInt()) {
         when (xPos.value) {
             (53.25F) -> {
-                trapJerry(States.Track.Left)
+                trapJerry(GameStates.Track.Left)
             }
+
             (284.75F) -> {
-                trapJerry(States.Track.Right)
+                trapJerry(GameStates.Track.Right)
             }
+
             (171.5F) -> {
-                trapJerry(States.Track.Middle)
+                trapJerry(GameStates.Track.Middle)
             }
         }
     }
 }
 
 @Composable
-fun Cheese( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , cheeseJerry:(States.Track)->Unit, speedReset:()->Boolean){
-    val yPos = remember{ Animatable(-60F)}
-    val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
+fun Cheese(
+    show: Boolean,
+    paused: () -> Boolean,
+    dimension: WindowInfo,
+    delay: (GameStates.Track) -> Int,
+    cheeseJerry: (GameStates.Track) -> Unit,
+    speedReset: () -> Boolean
+) {
+    val yPos = remember { Animatable(-60F) }
+    val xPos = remember { Animatable((dimension.screenWidthinDp / 2 - 25.dp).value) }
     var alpha by remember { mutableFloatStateOf(1f) }
     var time = 22000
-    LaunchedEffect(Unit){
-        withContext(Dispatchers.IO){
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
             fun animation() {
                 launch {
                     while (!paused()) {
                         val track = list.random()
                         val delayTime = delay(track) + 8000
                         when (track) {
-                            States.Track.Middle -> {
+                            GameStates.Track.Middle -> {
                                 xPos.animateTo(
                                     (dimension.screenWidthinDp / 2 - 25.dp).value,
                                     tween(1)
                                 )
                             }
 
-                            States.Track.Left -> {
+                            GameStates.Track.Left -> {
                                 xPos.animateTo(
                                     (dimension.screenWidthinDp / 4 - 45.dp).value,
                                     tween(1)
                                 )
                             }
 
-                            States.Track.Right -> {
+                            GameStates.Track.Right -> {
                                 xPos.animateTo(
                                     (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
                                     tween(1)
@@ -809,14 +929,18 @@ fun Cheese( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (Sta
                     }
                     while (true) {
                         if (!paused()) {
-                            yPos.snapTo(-60F);animation();break
+                            yPos.snapTo(-60F);time = 22000;animation();break
                         }
                     }
                 }
             }
         }
     }
-    alpha = if(show){0f}else{1f}
+    alpha = if (show) {
+        0f
+    } else {
+        1f
+    }
     Image(
         painter = painterResource(id = R.drawable.cheese), contentDescription = null,
         modifier = Modifier
@@ -824,23 +948,25 @@ fun Cheese( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (Sta
             .offset(xPos.value.dp, yPos.value.dp)
             .alpha(alpha)
     )
-    if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -180.dp).value.toInt()) {
+    if (yPos.value.toInt() in ((dimension.screenHeightinDp - 250.dp).value.toInt())..(dimension.screenHeightinDp - 180.dp).value.toInt()) {
         when (xPos.value) {
             (53.25F) -> {
-                cheeseJerry(States.Track.Left)
+                cheeseJerry(GameStates.Track.Left)
             }
+
             (284.75F) -> {
-                cheeseJerry(States.Track.Right)
+                cheeseJerry(GameStates.Track.Right)
             }
+
             (171.5F) -> {
-                cheeseJerry(States.Track.Middle)
+                cheeseJerry(GameStates.Track.Middle)
             }
         }
     }
 }
 
 @Composable
-fun gameover(useCheese:()->Unit , playagain:()->Unit, home:()->Unit) {
+fun gameover(useCheese: () -> Unit, playagain: () -> Unit, home: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -857,7 +983,7 @@ fun gameover(useCheese:()->Unit , playagain:()->Unit, home:()->Unit) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.gameover),
-            contentDescription =null,
+            contentDescription = null,
             modifier = Modifier.size(100.dp, 85.dp)
         )
 
@@ -888,7 +1014,7 @@ fun gameover(useCheese:()->Unit , playagain:()->Unit, home:()->Unit) {
             )
             Text(
                 text = "Use Cheese",
-                color = Color.hsv(62f ,1f, 1f),
+                color = Color.hsv(62f, 1f, 1f),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(2.dp),

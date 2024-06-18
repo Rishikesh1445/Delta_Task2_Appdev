@@ -28,6 +28,9 @@ import androidx.navigation.NavController
 @Composable
 fun GamePage(navController: NavController, viewModel: GameViewModel, context: Context, dimension: WindowInfo, gyroscope: Gyroscope){
     val state = viewModel.state.value
+    val jerry = viewModel.jerry.value
+    val tom = viewModel.tom.value
+    val powerup = viewModel.powerup.value
 
     //GyroScope
     if (state.gyroMode) { viewModel.startGame(gyroscope, dimension)}
@@ -48,25 +51,25 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
     Obstacle_Right({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
     Obstacle_Right({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
 
-    Heart(state.heart, { viewModel.sendgamePause() }, dimension, { track ->viewModel.delay(track)} , { track-> viewModel.heartJerryBool(track)}, {viewModel.speedReset()})
-    Trap(state.trap, { viewModel.sendgamePause() },dimension, {track ->viewModel.delay(track)} , {track-> viewModel.trapJerryBool(track)}, {viewModel.speedReset()})
-    Cheese(state.cheese, { viewModel.sendgamePause() },dimension, {track ->viewModel.delay(track)} , {track-> viewModel.cheeseJerryBool(track)}, {viewModel.speedReset()})
+    Heart(powerup.heart, { viewModel.sendgamePause() }, dimension, { track ->viewModel.delay(track)} , { track-> viewModel.heartJerryBool(track)}, {viewModel.speedReset()})
+    Trap(powerup.trap, { viewModel.sendgamePause() },dimension, {track ->viewModel.delay(track)} , {track-> viewModel.trapJerryBool(track)}, {viewModel.speedReset()})
+    Cheese(powerup.cheese, { viewModel.sendgamePause() },dimension, {track ->viewModel.delay(track)} , {track-> viewModel.cheeseJerryBool(track)}, {viewModel.speedReset()})
 
 
     //Scores in Top Bar
     Score(state.highscore, dimension)
     CheeseScore(state.cheeseScore)
-    HeartTime(state.heartTime, dimension)
+    HeartTime(powerup.heartTime, dimension)
 
     //determines the y position of Tom based on hits
     viewModel.closeToJerry(dimension)
-    viewModel.HeartJerryTime()
-    viewModel.trapRandom()
-    viewModel.CheeseCount()
+    viewModel.HeartJerryTime(context)
+    viewModel.trapRandom(context)
+    viewModel.CheeseCount(context)
 
     //Jerry Face Animation X axis
     val jerryTranslationx by animateDpAsState(
-        targetValue = state.jerryPositionx,
+        targetValue = jerry.jerryPositionx,
         label = "",
         animationSpec = tween(durationMillis = 200 , easing = LinearOutSlowInEasing)
     )
@@ -74,15 +77,15 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
     //BELOW PROPERTY BELONGS TO TOM AND JERRY
     //Jerry Face Animation Y axis
     val jerryTranslationy by animateDpAsState(
-        targetValue = state.jerryPositiony,
+        targetValue = jerry.jerryPositiony,
         label = "",
         animationSpec = tween(durationMillis = 2000 , easing = LinearOutSlowInEasing)
     )
 
     //Jerry Jump Animation
-    if(state.jerryJump){viewModel.JerryJumping(context)}
+    if(jerry.jerryJump){viewModel.JerryJumping(context)}
     val jerrySize by animateDpAsState(
-        targetValue = state.jerrySize,
+        targetValue = jerry.jerrySize,
         label = "",
         animationSpec = tween(durationMillis = 200 , easing = LinearOutSlowInEasing)
     )
@@ -98,22 +101,22 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
 
     //Tom Face Animation X axis
     val tomTranslationx by animateDpAsState(
-        targetValue = state.tomPositionx,
+        targetValue = tom.tomPositionx,
         label = "",
         animationSpec = tween(durationMillis = 200 , easing = LinearOutSlowInEasing)
     )
 
     //Tom Face Animation Y axis
     val tomTranslationy by animateDpAsState(
-        targetValue = state.tomPositiony,
+        targetValue = tom.tomPositiony,
         label = "",
-        animationSpec = tween(durationMillis = state.tomPositionyTiming, easing = LinearOutSlowInEasing)
+        animationSpec = tween(durationMillis = tom.tomPositionyTiming, easing = LinearOutSlowInEasing)
     )
 
     //Tom Jump Animation
-    if(state.tomJump){viewModel.TomJumping()}
+    if(tom.tomJump){viewModel.TomJumping()}
     val tomSize by animateDpAsState(
-        targetValue = state.tomSize,
+        targetValue = tom.tomSize,
         label = "",
         animationSpec = tween(durationMillis = 200 , easing = LinearOutSlowInEasing)
     )
