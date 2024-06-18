@@ -22,6 +22,22 @@ class GameViewModel:ViewModel() {
     private val _state = mutableStateOf(States())
     val state: State<States> = _state
 
+    fun gamePause(){
+        _state.value = _state.value.copy(gamePause = !state.value.gamePause)
+    }
+    fun sendgamePause():Boolean{
+        return state.value.gamePause
+    }
+    fun gameOverFunction(){
+        if(state.value.jerryTouched>1){
+            _state.value = _state.value.copy(gamePause = true, gameOver = true)
+        }
+    }
+
+    fun gyrobutton(){
+        _state.value = _state.value.copy(gyroMode = !state.value.gyroMode, touchMode = !state.value.touchMode)
+    }
+    
     fun openingAnimation(dimension: WindowInfo) {
         _state.value = _state.value.copy(
             jerryPositiony = dimension.screenHeightinDp - 275.dp,
@@ -44,13 +60,8 @@ class GameViewModel:ViewModel() {
                 tomPositionyTiming = 200,
                 tomPositiony = dimension.screenHeightinDp - 210.dp
             )
-            gameOver()
         }
 
-    }
-
-    private fun gameOver() {
-        viewModelScope.cancel()
     }
 
     //Tap Gesture Function
@@ -77,7 +88,6 @@ class GameViewModel:ViewModel() {
         viewModelScope.launch {
             //This Property Belongs to Gyroscope
             try {
-                if (state.value.gyroMode) {
                     var phoneRotation = 0F
                     delay(1000)
                     var changeTrack: States.Track
@@ -101,11 +111,10 @@ class GameViewModel:ViewModel() {
                         changeTrack(changeTrack, dimension)
 
                     }
-                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-
+            if(!state.value.gyroMode){viewModelScope.cancel()}
         }
     }
 
@@ -204,11 +213,6 @@ class GameViewModel:ViewModel() {
             States.Track.Right ->{while(previousRight==random){random = list.random()} ; previousRight=random; random }
             States.Track.Left ->{while(previousLeft==random){random = list.random()} ; previousLeft=random; random }
         }
-
-    }
-
-    fun show(show:Boolean){
-        _state.value = _state.value.copy(heart = !show, trap = !show, cheese = !show)
     }
 
     fun heartJerryBool(track: States.Track){
@@ -267,8 +271,6 @@ class GameViewModel:ViewModel() {
             LaunchedEffect(Unit){_state.value= _state.value.copy(cheeseScore = state.value.cheeseScore+1)}
             _state.value = _state.value.copy(cheese = false)
         }
-
-        Log.d("Rishi" , "${state.value.heart} ${state.value.trap} ${state.value.cheese}")
     }
 
     //Vibrator

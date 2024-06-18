@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 data class States(
     var highscore:Int =0,
     var cheeseScore:Int = 0,
+    var gamePause:Boolean = false,
     var gameOver:Boolean = false,
 
     var jerryJump:Boolean = false,
@@ -22,7 +23,6 @@ data class States(
     var tomPositiony: Dp = 1300.dp,
     var tomPositionyTiming:Int = 2000,
 
-    var showOthers: Boolean = true,
     var heart:Boolean = false,
     var trap:Boolean = false,
     var cheese:Boolean = false,

@@ -30,8 +30,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,8 +53,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.stream.IntStream.range
 
 @Composable
 fun FrontPage(navController: NavController, dimension: WindowInfo){
@@ -145,7 +150,9 @@ fun trackAnimation(dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset
             if(speedReset()){time = 1500}
         }
     }
-    Box(modifier = Modifier.fillMaxSize().background(color = Color.hsv(185f, 0.81f, 1f))){}
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(color = Color.hsv(185f, 0.81f, 1f))){}
     //The roads with moving tracks and Tap Gesture
     Canvas(
         modifier = Modifier
@@ -198,7 +205,7 @@ fun trackAnimation(dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset
 }
 
 @Composable
-fun Obstacle_Middle(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, show:(Boolean)->Unit, speedReset:()->Boolean){
+fun Obstacle_Middle(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
     val yPos = remember{ Animatable(-100F)}
     var time = 8000
     var delayTime :Int
@@ -209,9 +216,8 @@ fun Obstacle_Middle(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerr
             delayTime = delay(States.Track.Middle)
             yPos.animateTo(dimension.screenHeight+100F , animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime))
             yPos.animateTo(-100F, animationSpec = tween(1))
-            if(time < 3500){show(true)}
-            if(time>=3500){time -= 1500; show(false)}
-            if(speedReset()){time = 8000 ; show(false)}
+            if(time>=3500){time -= 1500}
+            if(speedReset()){time = 8000}
         }
     }
 
@@ -260,7 +266,7 @@ fun Obstacle_Middle(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerr
 }
 
 @Composable
-fun Obstacle_Left(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, show:(Boolean)->Unit, speedReset:()->Boolean){
+fun Obstacle_Left(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit, crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
     val yPos = remember{ Animatable(-100F)}
     var time = 8000
     var delayTime:Int
@@ -270,9 +276,8 @@ fun Obstacle_Left(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:
             delayTime = delay(States.Track.Left)
             yPos.animateTo(dimension.screenHeight+100F , animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime))
             yPos.animateTo(-100F, animationSpec = tween(1))
-            if(time < 3500){show(true)}
-            if(time>=3500){time -= 1500; show(false)}
-            if(speedReset()){time = 8000 ; show(false)}
+            if(time>=3500){time -= 1500}
+            if(speedReset()){time = 8000}
         }
     }
 
@@ -321,7 +326,7 @@ fun Obstacle_Left(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:
 }
 
 @Composable
-fun Obstacle_Right(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit,  show:(Boolean)->Unit, speedReset:()->Boolean){
+fun Obstacle_Right(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
     val yPos = remember{ Animatable(-100F)}
     var time = 8000
     var delayTime:Int
@@ -331,9 +336,8 @@ fun Obstacle_Right(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry
             delayTime = delay(States.Track.Right)
             yPos.animateTo(dimension.screenHeight+100F , animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime))
             yPos.animateTo(-100F, animationSpec = tween(1))
-            if(time < 3500){show(true)}
-            if(time>=3500){time -= 1500 ; show(false)}
-            if(speedReset()){time = 8000 ; show(false)}
+            if(time>=3500){time -= 1500 }
+            if(speedReset()){time = 8000 }
         }
     }
 
@@ -428,31 +432,62 @@ fun CheeseScore(cheese:Int){
 val list = listOf(States.Track.Middle, States.Track.Left, States.Track.Right)
 
 @Composable
-fun Heart(show:Boolean, dimension: WindowInfo, delay: (States.Track) -> Int , heartJerry:(States.Track)->Unit){
-    if(show){
+fun Heart( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , heartJerry:(States.Track)->Unit){
         val yPos = remember{ Animatable(-60F)}
-        val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value) }
+        val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
+        var alpha by remember { mutableFloatStateOf(1f) }
+        var time = 22000
         LaunchedEffect(Unit){
-            while(true){
-                val track = list.random()
-                val delayTime = delay(track)
-                when (track) {
-                    States.Track.Middle -> { xPos.animateTo((dimension.screenWidthinDp/2-25.dp).value , tween(1)) }
-                    States.Track.Left -> { xPos.animateTo((dimension.screenWidthinDp/4-45.dp).value , tween(1)) }
-                    States.Track.Right -> { xPos.animateTo((3*dimension.screenWidthinDp/4 - 10.dp).value , tween(1))}
-                }
-                yPos.animateTo(2500F , tween(10000, easing = LinearEasing, delayMillis = delayTime))
-                yPos.animateTo(-60F , tween(1, easing = LinearEasing))
+            withContext(Dispatchers.IO){
+                launch {
+                    while (paused()) {
+                        val track = list.random()
+                        val delayTime = delay(track) + 4500
+                        when (track) {
+                            States.Track.Middle -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 2 - 25.dp).value,
+                                    tween(1)
+                                )
+                            }
 
+                            States.Track.Left -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 4 - 45.dp).value,
+                                    tween(1)
+                                )
+                            }
+
+                            States.Track.Right -> {
+                                xPos.animateTo(
+                                    (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
+                                    tween(1)
+                                )
+                            }
+                        }
+                        yPos.animateTo(
+                            2500F,
+                            tween(time, easing = LinearEasing, delayMillis = delayTime)
+                        ).endState
+                        if (time > 10000) {
+                            time -= 8000
+                        }
+                        yPos.animateTo(-60F, tween(1, easing = LinearEasing))
+                    }
+                }
+                launch { while(true){if(paused()){yPos.stop()}} }
             }
+
         }
+        alpha = if(show){0f}else{1f}
         Image(
             painter = painterResource(id = R.drawable.heart), contentDescription = null,
             modifier = Modifier
                 .size(50.dp, 50.dp)
                 .offset(xPos.value.dp, yPos.value.dp)
+                .alpha(alpha)
         )
-        if(yPos.value > (dimension.screenHeightinDp -250.dp).value) {
+        if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -150.dp).value.toInt()) {
             when (xPos.value) {
                 (53.25F) -> {
                     heartJerry(States.Track.Left)
@@ -465,7 +500,6 @@ fun Heart(show:Boolean, dimension: WindowInfo, delay: (States.Track) -> Int , he
                 }
             }
         }
-    }
 }
 @Composable
 fun HeartTime(time:Int , dimension: WindowInfo){
@@ -482,18 +516,19 @@ fun HeartTime(time:Int , dimension: WindowInfo){
             )
         }
     Image(painter = painterResource(id = R.drawable.heart), contentDescription = null,
-        modifier = Modifier.size(20.dp, 20.dp).offset(dimension.screenWidthinDp/2- 24.dp, 22.dp))
+        modifier = Modifier
+            .size(20.dp, 20.dp)
+            .offset(dimension.screenWidthinDp / 2 - 24.dp, 22.dp))
 
     Text(
         "$time", modifier = Modifier
             .fillMaxSize()
-            .offset(dimension.screenWidthinDp/2, 18.dp), fontSize = 20.sp
+            .offset(dimension.screenWidthinDp / 2, 18.dp), fontSize = 20.sp
     )
 }
 
 @Composable
-fun Trap(show:Boolean, dimension: WindowInfo, delay: (States.Track) -> Int , trapJerry:(States.Track)->Unit){
-    if(show){
+fun Trap(dimension: WindowInfo, delay: (States.Track) -> Int , trapJerry:(States.Track)->Unit){
         val yPos = remember{ Animatable(-60F)}
         val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value) }
         LaunchedEffect(Unit){
@@ -529,12 +564,10 @@ fun Trap(show:Boolean, dimension: WindowInfo, delay: (States.Track) -> Int , tra
                 }
             }
         }
-    }
 }
 
 @Composable
-fun Cheese(show:Boolean, dimension: WindowInfo, delay: (States.Track) -> Int , cheeseJerry:(States.Track)->Unit){
-    if(show){
+fun Cheese(dimension: WindowInfo, delay: (States.Track) -> Int , cheeseJerry:(States.Track)->Unit){
         val yPos = remember{ Animatable(-60F)}
         val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value) }
         LaunchedEffect(Unit){
@@ -570,7 +603,6 @@ fun Cheese(show:Boolean, dimension: WindowInfo, delay: (States.Track) -> Int , c
                 }
             }
         }
-    }
 }
 
 @Composable
