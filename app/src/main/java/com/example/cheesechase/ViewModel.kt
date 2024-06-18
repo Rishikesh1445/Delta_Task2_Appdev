@@ -33,6 +33,15 @@ class GameViewModel:ViewModel() {
             _state.value = _state.value.copy(gamePause = true, gameOver = true)
         }
     }
+    fun playAgain(dimension: WindowInfo){
+        _state.value = _state.value.copy(gamePause = false, gameOver = false , highscore = 0, cheeseScore = 0, jerryTouched = 0, heartTime = 0)
+        changeTrack(States.Track.Middle, dimension)
+    }
+    fun useCheese(){
+        if(state.value.cheeseScore>0) {
+            _state.value = _state.value.copy(gamePause = false, gameOver = false, jerryTouched = 0, cheeseScore = state.value.cheeseScore-1)
+        }
+    }
 
     fun gyrobutton(){
         _state.value = _state.value.copy(gyroMode = !state.value.gyroMode, touchMode = !state.value.touchMode)
@@ -236,8 +245,10 @@ class GameViewModel:ViewModel() {
         if(state.value.heart) {
             LaunchedEffect(Unit) {
                 while (state.value.heartTime > 0) {
-                    delay(1000)
-                    _state.value = _state.value.copy(heartTime = state.value.heartTime - 1)
+                    if(!state.value.gamePause) {
+                        delay(1000)
+                        _state.value = _state.value.copy(heartTime = state.value.heartTime - 1)
+                    }
                 }
             }
             if (state.value.heartTime == 0) {
@@ -249,14 +260,18 @@ class GameViewModel:ViewModel() {
     @Composable
     fun trapRandom(){
         if(state.value.trap) {
-            val random = Random.nextBoolean()
-            if (random) {
-                _state.value = _state.value.copy(jerryTouched = state.value.jerryTouched + 1, trap = false)
-            } else {
-                LaunchedEffect(Unit) {
-                    _state.value = _state.value.copy(speedReset = true, trap = false)
-                    delay(12000)
-                    _state.value = _state.value.copy(speedReset = false)
+            LaunchedEffect(Unit) {
+                val random = Random.nextBoolean()
+                if (random) {
+                    _state.value = _state.value.copy(jerryTouched = state.value.jerryTouched + 1)
+                    delay(5000)
+                    _state.value = _state.value.copy(trap = false)
+                } else {
+
+                        _state.value = _state.value.copy(speedReset = true)
+                        delay(5000)
+                        _state.value = _state.value.copy(speedReset = false, trap = false)
+
                 }
             }
         }
@@ -268,8 +283,9 @@ class GameViewModel:ViewModel() {
     @Composable
     fun CheeseCount(){
         if(state.value.cheese){
-            LaunchedEffect(Unit){_state.value= _state.value.copy(cheeseScore = state.value.cheeseScore+1)}
-            _state.value = _state.value.copy(cheese = false)
+            LaunchedEffect(Unit){_state.value= _state.value.copy(cheeseScore = state.value.cheeseScore+1)
+            delay(5000)
+            _state.value = _state.value.copy(cheese = false)}
         }
     }
 

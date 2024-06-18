@@ -1,5 +1,6 @@
 package com.example.cheesechase
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.EaseInElastic
 import androidx.compose.animation.core.EaseInOutBounce
@@ -28,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -54,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
 import androidx.navigation.NavController
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -138,16 +141,45 @@ fun FrontPage(navController: NavController, dimension: WindowInfo){
 }
 
 @Composable
-fun trackAnimation(dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset:()->Boolean){
+fun trackAnimation(paused: () -> Boolean,   dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset:()->Boolean){
     //Animation
     val translate = remember{ Animatable(-3 * dimension.screenHeight / 20) }
     var time=1500
     LaunchedEffect(Unit){
-        while (true){
-            translate.animateTo(dimension.screenHeight/20 , animationSpec = tween(time, easing = LinearEasing))
-            translate.animateTo(-3 * dimension.screenHeight / 20,animationSpec = tween(1, easing = LinearEasing))
-            if(time>300) { time -= 25}
-            if(speedReset()){time = 1500}
+        fun animation() {
+            launch {
+                while (!paused()) {
+                    translate.animateTo(
+                        dimension.screenHeight / 20,
+                        animationSpec = tween(time, easing = LinearEasing)
+                    )
+                    translate.animateTo(
+                        -3 * dimension.screenHeight / 20,
+                        animationSpec = tween(1, easing = LinearEasing)
+                    )
+                    if (time > 300) {
+                        time -= 25
+                    }
+                    if (speedReset()) {
+                        time = 1500
+                    }
+                }
+            }
+        }
+        animation()
+        launch {
+            while(true) {
+                while (true) {
+                    if (paused()) {
+                        translate.stop();break
+                    }; delay(200)
+                }
+                while (true) {
+                    if (!paused()) {
+                        translate.snapTo(-3 * dimension.screenHeight / 20);animation();break
+                    }; delay(200)
+                }
+            }
         }
     }
     Box(modifier = Modifier
@@ -205,19 +237,50 @@ fun trackAnimation(dimension:WindowInfo, whereClicked: (Float)->Unit, speedReset
 }
 
 @Composable
-fun Obstacle_Middle(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
+fun Obstacle_Middle(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
     val yPos = remember{ Animatable(-100F)}
     var time = 8000
     var delayTime :Int
 
     //Animation in while loop and animateTo executes from Coroutine context
     LaunchedEffect(Unit){
-        while (true){
-            delayTime = delay(States.Track.Middle)
-            yPos.animateTo(dimension.screenHeight+100F , animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime))
-            yPos.animateTo(-100F, animationSpec = tween(1))
-            if(time>=3500){time -= 1500}
-            if(speedReset()){time = 8000}
+            fun animation(){
+                launch {
+                    while (!paused()) {
+                        delayTime = delay(States.Track.Middle)
+                        yPos.animateTo(
+                            dimension.screenHeight + 100F,
+                            animationSpec = tween(
+                                time,
+                                easing = LinearEasing,
+                                delayMillis = delayTime
+                            )
+                        )
+                        yPos.animateTo(-100F, animationSpec = tween(1))
+                        if (time >= 3500) {
+                            time -= 1500
+                        }
+                        Log.d("Rishi" , "$time")
+                        if (speedReset()) {
+                            time = 8000
+                        }
+                    }
+                }
+            }
+        animation()
+        launch {
+            while(true) {
+                while (true) {
+                    if (paused()) {
+                        yPos.stop();break
+                    }; delay(200)
+                }
+                while (true) {
+                    if (!paused()) {
+                        yPos.snapTo(-100F);animation();break
+                    }; delay(200)
+                }
+            }
         }
     }
 
@@ -266,18 +329,44 @@ fun Obstacle_Middle(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerr
 }
 
 @Composable
-fun Obstacle_Left(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit, crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
+fun Obstacle_Left(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit, crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
     val yPos = remember{ Animatable(-100F)}
     var time = 8000
     var delayTime:Int
     //Animation in while loop and animateTo executes from Coroutine context
     LaunchedEffect(Unit){
-        while (true){
-            delayTime = delay(States.Track.Left)
-            yPos.animateTo(dimension.screenHeight+100F , animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime))
-            yPos.animateTo(-100F, animationSpec = tween(1))
-            if(time>=3500){time -= 1500}
-            if(speedReset()){time = 8000}
+        fun animation() {
+            launch {
+                while (!paused()) {
+                    delayTime = delay(States.Track.Left)
+                    yPos.animateTo(
+                        dimension.screenHeight + 100F,
+                        animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime)
+                    )
+                    yPos.animateTo(-100F, animationSpec = tween(1))
+                    if (time >= 3500) {
+                        time -= 1500
+                    }
+                    if (speedReset()) {
+                        time = 8000
+                    }
+                }
+            }
+        }
+        animation()
+        launch {
+            while(true) {
+                while (true) {
+                    if (paused()) {
+                        yPos.stop();break
+                    }; delay(200)
+                }
+                while (true) {
+                    if (!paused()) {
+                        yPos.snapTo(-100F);animation();break
+                    }; delay(200)
+                }
+            }
         }
     }
 
@@ -326,18 +415,44 @@ fun Obstacle_Left(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:
 }
 
 @Composable
-fun Obstacle_Right(dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
+fun Obstacle_Right(paused: () -> Boolean, dimension: WindowInfo,delay:(States.Track)->Int, crossedJerry:(States.Track)->Unit , crossedTom:(States.Track)->Unit, speedReset:()->Boolean){
     val yPos = remember{ Animatable(-100F)}
     var time = 8000
     var delayTime:Int
     //Animation in while loop and animateTo executes from Coroutine context
     LaunchedEffect(Unit){
-        while (true){
-            delayTime = delay(States.Track.Right)
-            yPos.animateTo(dimension.screenHeight+100F , animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime))
-            yPos.animateTo(-100F, animationSpec = tween(1))
-            if(time>=3500){time -= 1500 }
-            if(speedReset()){time = 8000 }
+        fun animation() {
+            launch {
+                while (!paused()) {
+                    delayTime = delay(States.Track.Right)
+                    yPos.animateTo(
+                        dimension.screenHeight + 100F,
+                        animationSpec = tween(time, easing = LinearEasing, delayMillis = delayTime)
+                    )
+                    yPos.animateTo(-100F, animationSpec = tween(1))
+                    if (time >= 3500) {
+                        time -= 1500
+                    }
+                    if (speedReset()) {
+                        time = 8000
+                    }
+                }
+            }
+        }
+        animation()
+        launch {
+            while(true) {
+                while (true) {
+                    if (paused()) {
+                        yPos.stop();break
+                    }; delay(200)
+                }
+                while (true) {
+                    if (!paused()) {
+                        yPos.snapTo(-100F);animation();break
+                    }; delay(200)
+                }
+            }
         }
     }
 
@@ -432,52 +547,70 @@ fun CheeseScore(cheese:Int){
 val list = listOf(States.Track.Middle, States.Track.Left, States.Track.Right)
 
 @Composable
-fun Heart( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , heartJerry:(States.Track)->Unit){
+fun Heart( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , heartJerry:(States.Track)->Unit, speedReset:()->Boolean){
         val yPos = remember{ Animatable(-60F)}
         val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
         var alpha by remember { mutableFloatStateOf(1f) }
         var time = 22000
         LaunchedEffect(Unit){
             withContext(Dispatchers.IO){
-                launch {
-                    while (paused()) {
-                        val track = list.random()
-                        val delayTime = delay(track) + 4500
-                        when (track) {
-                            States.Track.Middle -> {
-                                xPos.animateTo(
-                                    (dimension.screenWidthinDp / 2 - 25.dp).value,
-                                    tween(1)
-                                )
-                            }
+                fun animation() {
+                    launch {
+                        while (!paused()) {
+                            val track = list.random()
+                            val delayTime = delay(track) + 2500
+                            when (track) {
+                                States.Track.Middle -> {
+                                    xPos.animateTo(
+                                        (dimension.screenWidthinDp / 2 - 25.dp).value,
+                                        tween(1)
+                                    )
+                                }
 
-                            States.Track.Left -> {
-                                xPos.animateTo(
-                                    (dimension.screenWidthinDp / 4 - 45.dp).value,
-                                    tween(1)
-                                )
-                            }
+                                States.Track.Left -> {
+                                    xPos.animateTo(
+                                        (dimension.screenWidthinDp / 4 - 45.dp).value,
+                                        tween(1)
+                                    )
+                                }
 
-                            States.Track.Right -> {
-                                xPos.animateTo(
-                                    (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
-                                    tween(1)
-                                )
+                                States.Track.Right -> {
+                                    xPos.animateTo(
+                                        (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
+                                        tween(1)
+                                    )
+                                }
                             }
+                            yPos.animateTo(
+                                2500F,
+                                tween(time, easing = LinearEasing, delayMillis = delayTime)
+                            ).endState
+                            if (time > 10000) {
+                                time -= 8000
+                            }
+                            if (speedReset()) {
+                                time = 22000
+                            }
+                            yPos.animateTo(-60F, tween(1, easing = LinearEasing))
                         }
-                        yPos.animateTo(
-                            2500F,
-                            tween(time, easing = LinearEasing, delayMillis = delayTime)
-                        ).endState
-                        if (time > 10000) {
-                            time -= 8000
-                        }
-                        yPos.animateTo(-60F, tween(1, easing = LinearEasing))
                     }
                 }
-                launch { while(true){if(paused()){yPos.stop()}} }
+                animation()
+                launch {
+                    while(true) {
+                        while (true) {
+                            if (paused()) {
+                                yPos.stop();break
+                            }
+                        }
+                        while (true) {
+                            if (!paused()) {
+                                yPos.snapTo(-60F);animation();break
+                            }
+                        }
+                    }
+                }
             }
-
         }
         alpha = if(show){0f}else{1f}
         Image(
@@ -487,7 +620,7 @@ fun Heart( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (Stat
                 .offset(xPos.value.dp, yPos.value.dp)
                 .alpha(alpha)
         )
-        if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -150.dp).value.toInt()) {
+        if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -180.dp).value.toInt()) {
             when (xPos.value) {
                 (53.25F) -> {
                     heartJerry(States.Track.Left)
@@ -528,81 +661,182 @@ fun HeartTime(time:Int , dimension: WindowInfo){
 }
 
 @Composable
-fun Trap(dimension: WindowInfo, delay: (States.Track) -> Int , trapJerry:(States.Track)->Unit){
-        val yPos = remember{ Animatable(-60F)}
-        val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value) }
-        LaunchedEffect(Unit){
-            while(true){
-                val track = list.random()
-                val delayTime = delay(track)
-                when (track) {
-                    States.Track.Middle -> { xPos.animateTo((dimension.screenWidthinDp/2-25.dp).value , tween(1)) }
-                    States.Track.Left -> { xPos.animateTo((dimension.screenWidthinDp/4-45.dp).value , tween(1)) }
-                    States.Track.Right -> { xPos.animateTo((3*dimension.screenWidthinDp/4 - 10.dp).value , tween(1))}
-                }
-                yPos.animateTo(2500F , tween(10000, easing = LinearEasing, delayMillis = delayTime))
-                yPos.animateTo(-60F , tween(1, easing = LinearEasing))
+fun Trap( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , trapJerry:(States.Track)->Unit, speedReset:()->Boolean){
+    val yPos = remember{ Animatable(-60F)}
+    val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
+    var alpha by remember { mutableFloatStateOf(1f) }
+    var time = 22000
+    LaunchedEffect(Unit){
+        withContext(Dispatchers.IO){
+            fun animation() {
+                launch {
+                    while (!paused()) {
+                        val track = list.random()
+                        val delayTime = delay(track) + 6000
+                        when (track) {
+                            States.Track.Middle -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 2 - 25.dp).value,
+                                    tween(1)
+                                )
+                            }
 
+                            States.Track.Left -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 4 - 45.dp).value,
+                                    tween(1)
+                                )
+                            }
+
+                            States.Track.Right -> {
+                                xPos.animateTo(
+                                    (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
+                                    tween(1)
+                                )
+                            }
+                        }
+                        yPos.animateTo(
+                            2500F,
+                            tween(time, easing = LinearEasing, delayMillis = delayTime)
+                        ).endState
+                        if (time > 10000) {
+                            time -= 8000
+                        }
+                        if (speedReset()) {
+                            time = 22000
+                        }
+                        yPos.animateTo(-60F, tween(1, easing = LinearEasing))
+                    }
+                }
+            }
+            animation()
+            launch {
+
+                while(true) {
+                    while (true) {
+                        if (paused()) {
+                            yPos.stop();break
+                        }
+                    }
+                    while (true) {
+                        if (!paused()) {
+                            yPos.snapTo(-60F);animation();break
+                        }
+                    }
+                }
             }
         }
-        Image(
-            painter = painterResource(id = R.drawable.box), contentDescription = null,
-            modifier = Modifier
-                .size(50.dp, 50.dp)
-                .offset(xPos.value.dp, yPos.value.dp)
-        )
-        if(yPos.value > (dimension.screenHeightinDp -250.dp).value) {
-            when (xPos.value) {
-                (53.25F) -> {
-                    trapJerry(States.Track.Left)
-                }
-                (284.75F) -> {
-                    trapJerry(States.Track.Right)
-                }
-                (171.5F) -> {
-                    trapJerry(States.Track.Middle)
-                }
+    }
+    alpha = if(show){0f}else{1f}
+    Image(
+        painter = painterResource(id = R.drawable.box), contentDescription = null,
+        modifier = Modifier
+            .size(50.dp, 50.dp)
+            .offset(xPos.value.dp, yPos.value.dp)
+            .alpha(alpha)
+    )
+    if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -180.dp).value.toInt()) {
+        when (xPos.value) {
+            (53.25F) -> {
+                trapJerry(States.Track.Left)
+            }
+            (284.75F) -> {
+                trapJerry(States.Track.Right)
+            }
+            (171.5F) -> {
+                trapJerry(States.Track.Middle)
             }
         }
+    }
 }
 
 @Composable
-fun Cheese(dimension: WindowInfo, delay: (States.Track) -> Int , cheeseJerry:(States.Track)->Unit){
-        val yPos = remember{ Animatable(-60F)}
-        val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value) }
-        LaunchedEffect(Unit){
-            while(true){
-                val track = list.random()
-                val delayTime = delay(track)
-                when (track) {
-                    States.Track.Middle -> { xPos.animateTo((dimension.screenWidthinDp/2-25.dp).value , tween(1)) }
-                    States.Track.Left -> { xPos.animateTo((dimension.screenWidthinDp/4-45.dp).value , tween(1)) }
-                    States.Track.Right -> { xPos.animateTo((3*dimension.screenWidthinDp/4 - 10.dp).value , tween(1))}
-                }
-                yPos.animateTo(2500F , tween(10000, easing = LinearEasing, delayMillis = delayTime))
-                yPos.animateTo(-60F , tween(1, easing = LinearEasing))
+fun Cheese( show:Boolean, paused:()->Boolean ,dimension: WindowInfo, delay: (States.Track) -> Int , cheeseJerry:(States.Track)->Unit, speedReset:()->Boolean){
+    val yPos = remember{ Animatable(-60F)}
+    val xPos = remember { Animatable((dimension.screenWidthinDp/2-25.dp).value)}
+    var alpha by remember { mutableFloatStateOf(1f) }
+    var time = 22000
+    LaunchedEffect(Unit){
+        withContext(Dispatchers.IO){
+            fun animation() {
+                launch {
+                    while (!paused()) {
+                        val track = list.random()
+                        val delayTime = delay(track) + 8000
+                        when (track) {
+                            States.Track.Middle -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 2 - 25.dp).value,
+                                    tween(1)
+                                )
+                            }
 
+                            States.Track.Left -> {
+                                xPos.animateTo(
+                                    (dimension.screenWidthinDp / 4 - 45.dp).value,
+                                    tween(1)
+                                )
+                            }
+
+                            States.Track.Right -> {
+                                xPos.animateTo(
+                                    (3 * dimension.screenWidthinDp / 4 - 10.dp).value,
+                                    tween(1)
+                                )
+                            }
+                        }
+                        yPos.animateTo(
+                            2500F,
+                            tween(time, easing = LinearEasing, delayMillis = delayTime)
+                        ).endState
+                        if (time > 10000) {
+                            time -= 8000
+                        }
+                        if (speedReset()) {
+                            time = 22000
+                        }
+                        yPos.animateTo(-60F, tween(1, easing = LinearEasing))
+                    }
+                }
+            }
+            animation()
+            launch {
+                while (true) {
+                    while (true) {
+                        if (paused()) {
+                            yPos.stop();break
+                        }
+                    }
+                    while (true) {
+                        if (!paused()) {
+                            yPos.snapTo(-60F);animation();break
+                        }
+                    }
+                }
             }
         }
-        Image(
-            painter = painterResource(id = R.drawable.cheese), contentDescription = null,
-            modifier = Modifier
-                .size(50.dp, 50.dp)
-                .offset(xPos.value.dp, yPos.value.dp)
-        )
-        if(yPos.value > (dimension.screenHeightinDp -250.dp).value) {
-            when (xPos.value) {
-                (53.25F) -> {
-                    cheeseJerry(States.Track.Left)
-                }
-                (284.75F) -> {
-                    cheeseJerry(States.Track.Right)
-                }
-                (171.5F) -> {
-                    cheeseJerry(States.Track.Middle)
-                }
+    }
+    alpha = if(show){0f}else{1f}
+    Image(
+        painter = painterResource(id = R.drawable.cheese), contentDescription = null,
+        modifier = Modifier
+            .size(50.dp, 50.dp)
+            .offset(xPos.value.dp, yPos.value.dp)
+            .alpha(alpha)
+    )
+    if(yPos.value.toInt() in ((dimension.screenHeightinDp -250.dp).value.toInt())..(dimension.screenHeightinDp -180.dp).value.toInt()) {
+        when (xPos.value) {
+            (53.25F) -> {
+                cheeseJerry(States.Track.Left)
+            }
+            (284.75F) -> {
+                cheeseJerry(States.Track.Right)
+            }
+            (171.5F) -> {
+                cheeseJerry(States.Track.Middle)
             }
         }
+    }
 }
 
 @Composable

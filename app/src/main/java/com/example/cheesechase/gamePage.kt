@@ -36,24 +36,21 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
     viewModel.openingAnimation(dimension)
 
     //White Tracks in Road and Animation
-    trackAnimation(dimension, { x -> viewModel.trackClicked(x, dimension) }, {viewModel.speedReset()})
+    trackAnimation({ viewModel.sendgamePause() }, dimension, { x -> viewModel.trackClicked(x, dimension) }, {viewModel.speedReset()})
 
-    //here, 3 Obstacles are added for each track, if needed more, simply create another function
-    Obstacle_Middle(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
-    Obstacle_Middle(dimension , {track ->viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
-    Obstacle_Middle(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
+//    here, 3 Obstacles are added for each track, if needed more, simply create another function
+    Obstacle_Middle({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
+    Obstacle_Middle({ viewModel.sendgamePause() },dimension , {track ->viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
 
-    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
-    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
-    Obstacle_Left(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},  {viewModel.speedReset()})
+    Obstacle_Left({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)},{viewModel.speedReset()})
+    Obstacle_Left({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
 
-    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
-    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
-    Obstacle_Right(dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
+    Obstacle_Right({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
+    Obstacle_Right({ viewModel.sendgamePause() },dimension , {track -> viewModel.delay(track)},{ track-> viewModel.obstacleCrossed(track , context) } , { track -> viewModel.tomJump(track)}, {viewModel.speedReset()})
 
-    Heart(state.heart, { viewModel.sendgamePause() }, dimension, { track ->viewModel.delay(track)} , { track-> viewModel.heartJerryBool(track)})
-    //Trap(dimension, {track ->viewModel.delay(track)} , {track-> viewModel.trapJerryBool(track)})
-    //Cheese(dimension, {track ->viewModel.delay(track)} , {track-> viewModel.cheeseJerryBool(track)})
+    Heart(state.heart, { viewModel.sendgamePause() }, dimension, { track ->viewModel.delay(track)} , { track-> viewModel.heartJerryBool(track)}, {viewModel.speedReset()})
+    Trap(state.trap, { viewModel.sendgamePause() },dimension, {track ->viewModel.delay(track)} , {track-> viewModel.trapJerryBool(track)}, {viewModel.speedReset()})
+    Cheese(state.cheese, { viewModel.sendgamePause() },dimension, {track ->viewModel.delay(track)} , {track-> viewModel.cheeseJerryBool(track)}, {viewModel.speedReset()})
 
 
     //Scores in Top Bar
@@ -130,9 +127,12 @@ fun GamePage(navController: NavController, viewModel: GameViewModel, context: Co
     )
 
     viewModel.gameOverFunction()
-    if(state.gameOver){gameover({},{},{navController.navigate(Screen.frontPage.route)})}
+    if(state.gameOver){gameover({viewModel.useCheese()},{viewModel.playAgain(dimension)},{navController.navigate(Screen.frontPage.route)})}
 
-    Row(modifier = Modifier.fillMaxWidth().padding(8.dp).offset(0.dp, dimension.screenHeightinDp - 75.dp),
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .padding(8.dp)
+        .offset(0.dp, dimension.screenHeightinDp - 75.dp),
         horizontalArrangement = Arrangement.Absolute.SpaceBetween , verticalAlignment = Alignment.CenterVertically){
         Button(onClick = { viewModel.gyrobutton() }) {
             Icon(painter = painterResource(id = R.drawable.baseline_screen_rotation_24), contentDescription = null,
